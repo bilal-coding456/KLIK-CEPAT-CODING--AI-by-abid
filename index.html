@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Klik Cepat - 50 Level</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      background: #0f172a;
+      color: #f8fafc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .game-card {
+      background: #1e293b;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      text-align: center;
+      max-width: 450px;
+      width: 100%;
+      border: 1px solid #334155;
+    }
+    h1 {
+      color: #38bdf8;
+      margin-bottom: 8px;
+      font-size: 24px;
+    }
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+      background: #0f172a;
+      padding: 15px;
+      border-radius: 10px;
+    }
+    .stat-label {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+    .stat-val {
+      font-size: 20px;
+      font-weight: bold;
+      color: #f1f5f9;
+    }
+    .progress-container {
+      width: 100%;
+      background-color: #334155;
+      border-radius: 8px;
+      margin: 15px 0;
+      overflow: hidden;
+      height: 12px;
+    }
+    .progress-bar {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #38bdf8, #818cf8);
+      transition: width 0.1s ease;
+    }
+    .click-btn {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: white;
+      font-size: 22px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+      transition: transform 0.05s ease, background 0.2s ease;
+      margin: 15px 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .click-btn:active {
+      transform: scale(0.92);
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+    }
+    .status-msg {
+      margin: 10px 0;
+      font-weight: bold;
+      min-height: 24px;
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 15px;
+    }
+    button.action-btn {
+      background: #334155;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    button.action-btn:hover {
+      background: #475569;
+    }
+    .code-section {
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px solid #334155;
+    }
+    .code-input-group {
+      display: flex;
+      gap: 5px;
+      margin-top: 10px;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #475569;
+      background: #0f172a;
+      color: white;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="game-card">
+  <h1>⚡ GAME KLIK CEPAT</h1>
+  <p style="font-size: 13px; color: #94a3b8;">Capai target klik dalam 10 detik (Level 1 - 50)</p>
+
+  <div class="stats">
+    <div class="stat-box">
+      <div class="stat-label">LEVEL</div>
+      <div class="stat-val" id="levelVal">1 / 50</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">POIN TOTAL</div>
+      <div class="stat-val" id="pointsVal">0</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">WAKTU</div>
+      <div class="stat-val" id="timeVal">10s</div>
+    </div>
+  </div>
+
+  <div class="progress-container">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <div style="font-size: 14px; margin-bottom: 5px;" id="targetText">Target: 0 / 8 Klik</div>
+
+  <button class="click-btn" id="clickBtn" onclick="handleClick()">MULAI</button>
+
+  <div class="status-msg" id="statusMsg">Tekan tombol untuk memulai!</div>
+
+  <div class="controls">
+    <button class="action-btn" onclick="resetGame()">Reset Game</button>
+  </div>
+
+  <div class="code-section">
+    <div style="font-size: 12px; color: #94a3b8;">Kode Level Saat Ini: <b id="currentCodeDisplay" style="color: #38bdf8; word-break: break-all;">-</b></div>
+    <div class="code-input-group">
+      <input type="text" id="codeInput" placeholder="Masukkan Kode Level...">
+      <button class="action-btn" onclick="useCode()">Pakai Kode</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Game State Variables
+  let level = 1;
+  let points = 0;
+  let clicksCount = 0;
+  let timeLeft = 10;
+  let timer = null;
+  let isPlaying = false;
+
+  // DOM Elements
+  const levelVal = document.getElementById('levelVal');
+  const pointsVal = document.getElementById('pointsVal');
+  const timeVal = document.getElementById('timeVal');
+  const targetText = document.getElementById('targetText');
+  const clickBtn = document.getElementById('clickBtn');
+  const progressBar = document.getElementById('progressBar');
+  const statusMsg = document.getElementById('statusMsg');
+  const currentCodeDisplay = document.getElementById('currentCodeDisplay');
+  const codeInput = document.getElementById('codeInput');
+
+  // Load saved data when browser is opened/refreshed
+  window.onload = function() {
+    loadGame();
+    updateUI();
+  };
+
+  function getTargetForLevel(lvl) {
+    // Formula target klik bertambah seiring naik level
+    return 6 + (lvl * 2);
+  }
+
+  function generateLevelCode(lvl) {
+    // Membuat string acak/encoded untuk level tertentu
+    return btoa('FASTCLICK_LVL_' + lvl + '_KEY');
+  }
+
+  function decodeLevelCode(codeStr) {
+    try {
+      const decoded = atob(codeStr.trim());
+      if (decoded.startsWith('FASTCLICK_LVL_') && decoded.endsWith('_KEY')) {
+        const lvl = parseInt(decoded.replace('FASTCLICK_LVL_', '').replace('_KEY', ''));
+        if (lvl >= 1 && lvl <= 50) return lvl;
+      }
+    } catch (e) {
+      return null;
+    }
+    return null;
+  }
+
+  function updateUI() {
+    levelVal.innerText = level + ' / 50';
+    pointsVal.innerText = points;
+    const target = getTargetForLevel(level);
+    targetText.innerText = `Target: ${clicksCount} / ${target} Klik`;
+    
+    const pct = Math.min((clicksCount / target) * 100, 100);
+    progressBar.style.width = pct + '%';
+
+    currentCodeDisplay.innerText = generateLevelCode(level);
+
+    if (!isPlaying) {
+      timeVal.innerText = '10s';
+      clickBtn.innerText = 'MULAI';
+    } else {
+      clickBtn.innerText = 'KLIK!';
+    }
+  }
+
+  function handleClick() {
+    if (!isPlaying) {
+      startGame();
+      return;
+    }
+
+    clicksCount++;
+    points++;
+    const target = getTargetForLevel(level);
+
+    updateUI();
+
+    if (clicksCount >= target) {
+      winLevel();
+    }
+  }
+
+  function startGame() {
+    isPlaying = true;
+    clicksCount = 0;
+    timeLeft = 10;
+    statusMsg.innerText = 'Ayo klik secepat mungkin!';
+    statusMsg.style.color = '#38bdf8';
+    
+    updateUI();
+
+    timer = setInterval(() => {
+      timeLeft--;
+      timeVal.innerText = timeLeft + 's';
+
+      if (timeLeft <= 0) {
+        clearInterval(timer);
+        if (clicksCount < getTargetForLevel(level)) {
+          failLevel();
+        }
+      }
+    }, 1000);
+  }
+
+  function winLevel() {
+    clearInterval(timer);
+    isPlaying = false;
+
+    if (level < 50) {
+      statusMsg.innerText = `🎉 Selamat! Level ${level} Selesai!`;
+      statusMsg.style.color = '#4ade80';
+      level++;
+    } else {
+      statusMsg.innerText = '🏆 TAMAT! Anda menyelesaikan Level 50!';
+      statusMsg.style.color = '#facc15';
+    }
+
+    clicksCount = 0;
+    saveGame();
+    updateUI();
+  }
+
+  function failLevel() {
+    isPlaying = false;
+    clicksCount = 0;
+    statusMsg.innerText = '❌ Waktu Habis! Coba lagi.';
+    statusMsg.style.color = '#f87171';
+    saveGame();
+    updateUI();
+  }
+
+  // Auto Save Sistem
+  function saveGame() {
+    const saveData = {
+      level: level,
+      points: points
+    };
+    localStorage.setItem('fastClickerSaveData', JSON.stringify(saveData));
+  }
+
+  // Auto Load Sistem
+  function loadGame() {
+    const saved = localStorage.getItem('fastClickerSaveData');
+    if (saved) {
+      const data = JSON.parse(saved);
+      level = data.level || 1;
+      points = data.points || 0;
+    }
+  }
+
+  function resetGame() {
+    if (confirm('Yakin ingin mereset level dan poin kembali ke Level 1?')) {
+      if (timer) clearInterval(timer);
+      isPlaying = false;
+      level = 1;
+      points = 0;
+      clicksCount = 0;
+      localStorage.removeItem('fastClickerSaveData');
+      statusMsg.innerText = 'Game berhasil direset.';
+      statusMsg.style.color = '#94a3b8';
+      updateUI();
+    }
+  }
+
+  function useCode() {
+    const code = codeInput.value.trim();
+    const targetLvl = decodeLevelCode(code);
+
+    if (targetLvl) {
+      if (timer) clearInterval(timer);
+      isPlaying = false;
+      level = targetLvl;
+      clicksCount = 0;
+      saveGame();
+      updateUI();
+      statusMsg.innerText = `🔓 Berhasil loncat ke Level ${level}!`;
+      statusMsg.style.color = '#4ade80';
+      codeInput.value = '';
+    } else {
+      statusMsg.innerText = '⚠️ Kode level tidak valid!';
+      statusMsg.style.color = '#f87171';
+    }
+  }
+</script>
+
+</body>
+      </html>
